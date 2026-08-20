@@ -50,19 +50,57 @@ The customer account could also log in successfully, and the customer UI did not
 
 `backend/middleware/requireRole.js` provides reusable role-based authorization. `verifyToken` remains responsible for authenticating the JWT and populating `req.user`; `requireRole` only checks the already-authenticated role. It returns HTTP 401 when no authenticated user is available and HTTP 403 with the required roles and actual role when authorization fails.
 
-The middleware is applied after `verifyToken` to all four protected product routes: create, update, delete, and publish. The GET routes remain authenticated-only and do not require the admin role.
+```js
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        error: 'Unauthorised: no valid session',
+      });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        error: 'Forbidden: insufficient permissions',
+        required: roles,
+        yourRole: req.user.role,
+      });
+    }
+
+    next();
+  };
+}
+```
+
+The middleware is applied after `verifyToken` to all four protected product routes: `POST /api/products`, `PUT /api/products/:id`, `DELETE /api/products/:id`, and `PATCH /api/products/:id/publish`. The GET routes remain authenticated-only and do not require the admin role. Authentication and authorisation are intentionally separate concerns: the first middleware proves who the caller is, and the second proves that the caller has the required role.
 
 ## After — Protection Confirmed
 
-The final verification results will be added after the middleware is applied:
+The same external API calls were rerun against a freshly seeded database after the fix. Customer and unauthenticated requests were rejected before the route handlers ran, while the admin request continued to work.
 
 | Request | Token | Expected result | Actual result |
 |---|---|---:|---:|
-| `DELETE /api/products/:id` | None | 401 | Pending fix verification |
-| `DELETE /api/products/:id` | Customer | 403 | Pending fix verification |
-| `DELETE /api/products/:id` | Admin | 200 | Pending fix verification |
-| `GET /api/products` | None | 401 | Pending fix verification |
-| `GET /api/products` | Customer | 200 | Pending fix verification |
-| `GET /api/products` | Admin | 200 | Pending fix verification |
+| `DELETE /api/products/:id` | None | 401 | **401** — `{"error":"No token provided"}` |
+| `DELETE /api/products/:id` | Customer | 403 | **403** — `{"error":"Forbidden: insufficient permissions","required":["admin"],"yourRole":"customer"}` |
+| `DELETE /api/products/:id` | Admin | 200 | **200** — `{"success":true,"message":"Product deleted"...}` |
+| `PATCH /api/products/:id/publish` | Customer | 403 | **403** — `{"error":"Forbidden: insufficient permissions","required":["admin"],"yourRole":"customer"}` |
+| `POST /api/products` | Customer | 403 | **403** — `{"error":"Forbidden: insufficient permissions","required":["admin"],"yourRole":"customer"}` |
+| `PUT /api/products/:id` | Customer | 403 | **403** — `{"error":"Forbidden: insufficient permissions","required":["admin"],"yourRole":"customer"}` |
+| `GET /api/products` | None | 401 | **401** — `{"error":"No token provided"}` |
+| `GET /api/products` | Customer | 200 | **200** — product list returned |
+| `GET /api/products` | Admin | 200 | **200** — product list returned |
 
-The customer 403 response must include `yourRole: "customer"`; the admin request must continue to succeed.
+The required customer DELETE proof can be reproduced with:
+
+```bash
+curl -i -X DELETE http://localhost:3001/api/products/cmt1buau80006wb8tssdw9t3h \\
+  -H 'Authorization: Bearer YOUR_CUSTOMER_TOKEN_HERE'
+```
+
+```http
+HTTP/1.1 403 Forbidden
+```
+
+```json
+{"error":"Forbidden: insufficient permissions","required":["admin"],"yourRole":"customer"}
+```
