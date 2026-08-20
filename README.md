@@ -162,4 +162,4 @@ frontend/
 
 ## Live Verification Endpoint
 
-A temporary live verification endpoint for this submission is available at [https://3001-iputm1gkjywmuqgyyg174-54a6423c.sg1.manus.computer/health](https://3001-iputm1gkjywmuqgyyg174-54a6423c.sg1.manus.computer/health). It reflects the seeded ShopAdmin API used to verify that customer requests return `403 Forbidden`, admin requests remain successful, and unauthenticated requests return `401 Unauthorized`.
+A temporary live verification endpoint for this submission is available at [https://3001-iputm1gkjywmuqgyyg174-54a6423c.sg1.manus.computer/api/products](https://3001-iputm1gkjywmuqgyyg174-54a6423c.sg1.manus.computer/api/products). Without a token it returns the expected `401 Unauthorized`; with the seeded credentials it can be used to verify that customer writes return `403 Forbidden` while admin writes remain successful.
