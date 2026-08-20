@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../prisma');
 const { verifyToken } = require('../middleware/auth');
+const { requireRole } = require('../middleware/requireRole');
 
 const router = express.Router();
 
@@ -46,16 +47,16 @@ router.get('/:id', verifyToken, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// WRITE ROUTES — verifyToken applied, NO requireRole check
-// Any authenticated user (including customers) can call these routes.
+// WRITE ROUTES — admin role required
+// Authentication and authorisation are separate middleware concerns.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * POST /api/products
  * Creates a new product.
- * Protected by: verifyToken only — NO role check
+ * Protected by: verifyToken, requireRole('admin')
  */
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, requireRole('admin'), async (req, res) => {
   const { name, description, price, category, published } = req.body;
 
   if (!name || !description || price === undefined || !category) {
@@ -83,9 +84,9 @@ router.post('/', verifyToken, async (req, res) => {
 /**
  * PUT /api/products/:id
  * Updates an existing product.
- * Protected by: verifyToken only — NO role check
+ * Protected by: verifyToken, requireRole('admin')
  */
-router.put('/:id', verifyToken, async (req, res) => {
+router.put('/:id', verifyToken, requireRole('admin'), async (req, res) => {
   const { name, description, price, category, published } = req.body;
 
   try {
@@ -116,11 +117,10 @@ router.put('/:id', verifyToken, async (req, res) => {
 /**
  * DELETE /api/products/:id
  * Deletes a product by ID.
- * Protected by: verifyToken only — NO role check
+ * Protected by: verifyToken, requireRole('admin')
  *
- * A customer with a valid JWT CAN call this endpoint and receive HTTP 200.
  */
-router.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, requireRole('admin'), async (req, res) => {
   try {
     const existing = await prisma.product.findUnique({ where: { id: req.params.id } });
 
@@ -144,9 +144,9 @@ router.delete('/:id', verifyToken, async (req, res) => {
 /**
  * PATCH /api/products/:id/publish
  * Toggles the published boolean on a product.
- * Protected by: verifyToken only — NO role check
+ * Protected by: verifyToken, requireRole('admin')
  */
-router.patch('/:id/publish', verifyToken, async (req, res) => {
+router.patch('/:id/publish', verifyToken, requireRole('admin'), async (req, res) => {
   try {
     const existing = await prisma.product.findUnique({ where: { id: req.params.id } });
 
