@@ -44,7 +44,7 @@ Response: **HTTP 200 OK**
 {"id":"cmt1bs9b10005rxmxdaonga4i","name":"Mechanical Keyboard — Compact 75%","description":"Hot-swappable switches, RGB backlight, and aluminium frame. Not yet released.","price":139,"category":"Electronics","published":true,"createdAt":"2026-08-20T09:35:58.237Z","updatedAt":"2026-08-20T09:35:58.392Z"}
 ```
 
-The customer account could also log in successfully, and the customer UI did not render Delete or Publish because `ProductActions.jsx` returned `null` for every user whose role was not `admin`. The successful 200 responses prove that the hidden controls were not backend security.
+The customer account could also log in successfully, and the customer UI did not render Delete or Publish because `ProductActions.jsx` returned `null` for every user whose role was not `admin`. The exact conditional is `if (user?.role !== 'admin') { return null; }`. The successful 200 responses prove that the hidden controls were not backend security.
 
 ## The Fix
 
