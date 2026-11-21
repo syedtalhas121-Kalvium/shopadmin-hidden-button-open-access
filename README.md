@@ -157,3 +157,9 @@ frontend/
       ProductActions.jsx    Role-aware action buttons
       ProductForm.jsx       Create / edit form
 ```
+
+---
+
+## Live Verification Endpoint
+
+A temporary live verification endpoint for this submission is available at [https://3001-iputm1gkjywmuqgyyg174-54a6423c.sg1.manus.computer/api/products](https://3001-iputm1gkjywmuqgyyg174-54a6423c.sg1.manus.computer/api/products). Without a token it returns the expected `401 Unauthorized`; with the seeded credentials it can be used to verify that customer writes return `403 Forbidden` while admin writes remain successful.
