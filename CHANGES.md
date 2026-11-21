@@ -165,3 +165,26 @@ HTTP/1.1 401 Unauthorized
 | `GET /api/products` | Admin | 200 | 200 |
 
 The implementation therefore distinguishes authentication failure (401) from insufficient role authorization (403), while preserving admin write access and customer/admin authenticated GET access.
+
+
+## Reproducibility — proof commit precedes the fix
+
+The before-proof is not a retrospective claim; it is an ancestor of the fix. Run this from the solution branch:
+
+```bash
+git log --reverse --format='%h %s' 8ce2b7b..HEAD
+```
+
+The relevant order is:
+
+```text
+8f3642d proof: document customer bypass of admin endpoints before fix
+cec5126 feat: create requireRole authorization middleware
+e29af67 feat: apply requireRole('admin') to all protected product routes
+```
+
+This ordering establishes that the bypass evidence was recorded before the authorization middleware and protected-route changes.
+
+## Demonstration video checklist
+
+The accompanying demonstration shows, in order: the customer UI with Delete and Publish absent; the original customer-token DELETE and publish bypasses returning complete HTTP 200 responses; the fixed customer DELETE and publish requests returning complete HTTP 403 responses; the no-token request returning HTTP 401; and the admin UI plus admin DELETE returning complete HTTP 200 response data. The narrator speaks each status code aloud.
